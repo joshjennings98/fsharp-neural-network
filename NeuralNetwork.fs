@@ -27,9 +27,9 @@ let lossFunction (loss : string) (n : int) : float -> float -> float =
   | _ -> failwithf "Invalid Loss Function." //ToDo: Replace with results type
 
 let initialiseLayers (neuralArchitecture : networkLayers) (inputs : float list) : learnableParameters = 
-  let genRandomList (count : int) : float list =
+  let genRandomList (size : int) : float list =
     let rnd = System.Random()
-    List.init count (fun el -> 0.01 * (rnd.Next(0, 100) |> float))
+    List.init size (fun el -> 0.01 * (rnd.Next(0, 100) |> float))
   let initialBiases = 
     genRandomList neuralArchitecture.Length 
   let initialWeights =
@@ -47,26 +47,24 @@ let initialiseLayers (neuralArchitecture : networkLayers) (inputs : float list) 
 let forwardFull (network : networkLayers) (parameters : learnableParameters) (inputs : float list) = 
   let mutable tempLayer = []
   let forwardSingleLayer (biases : float) (weights : float list) (inputs : float list) (activation : string) : float list * float list =
+    //let mutable count = -1
     let tempOutputs = 
-      let mutable count = 0
       Array.create (weights.Length / inputs.Length) 0.0
       |> Array.toList
-      |> List.map (fun el ->
-        let tempInputs = 
-          inputs
-          |> List.map (fun el -> 
-            count <- count + 1
-            el * weights.[count-1])
-        List.reduce (+) tempInputs)
-      |> List.map (fun x -> x + biases)
-    tempOutputs, (tempOutputs |> List.map (activateLayer activation))
+      |> List.mapi (fun i el -> 
+        biases + (inputs
+        |> List.mapi (fun j el -> 
+          //count <- count + 1
+          el * weights.[i * inputs.Length + j (*count*)])
+        |> List.reduce (+)))
+    tempOutputs, tempOutputs |> List.map (activateLayer activation)
   Array.create (network |> List.length) []
   |> Array.mapi (fun i el ->
     let prevLayerOutputs = if i = 0 then inputs else tempLayer
     let x = forwardSingleLayer parameters.biases.[i] parameters.weights.[i] prevLayerOutputs (network.[i] |> snd)
     tempLayer <- x |> snd
     x)
-
+  
 let getOverallError (targetOutputs : float list) (actualOutputs : float list) (loss : string) : float =
   actualOutputs
   |> List.map2 (lossFunction loss targetOutputs.Length) targetOutputs
