@@ -31,7 +31,7 @@ let dLossFunction (loss : string) (n : int) : float -> float -> float =
   | _ -> failwithf "Invalid Loss Function." //ToDo: Replace with results type
 
 let initialiseLayers (layers : networkLayers) (inputs : float list) : learnableParameters = 
-  let genRandomList (size : int) : float list =
+  let genRandomList (size : int) : float list = //Does this work?? -> List.init size (fun el -> 0.01 * (System.Random().Next(0, 100) |> float))
     let rnd = System.Random()
     List.init size (fun el -> 0.01 * (rnd.Next(0, 100) |> float))
   let initialBiases = 
@@ -46,8 +46,7 @@ let initialiseLayers (layers : networkLayers) (inputs : float list) : learnableP
   {weights = initialWeights; biases = initialBiases}
 
 let forwardSingleLayer (biases : float) (weights : float list) (inputs : float list) (activation : string) : float list * float list =
-  Array.create (weights.Length / inputs.Length) 0.0
-  |> Array.toList
+  List.init (weights.Length / inputs.Length) id
   |> List.mapi (fun i el -> 
     biases + (inputs
     |> List.mapi (fun j el -> 
