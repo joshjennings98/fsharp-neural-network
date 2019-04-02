@@ -6,23 +6,28 @@ type learnableParameters = {weights : float list list; biases : float list}
 
 type networkLayers = (int * string) list
 
-let activateLayer (activation : string) (x : float) : float =
+let activateLayer (activation : string) : float list -> float list =
   match activation with
-  | "id" -> x
-  | "sigmoid" -> 1.0 / (1.0 + Math.Exp(-1.0 * x)) 
-  | "relu" -> max x 0.0 
-  | _ -> failwithf "Invalid Activation." //ToDo: Replace with results type
+  | "id" -> id
+  | "sigmoid" -> List.map (fun x -> 1.0 / (1.0 + Math.Exp(-1.0 * x)))
+  | "relu" -> List.map (fun x -> max x 0.0) 
+  | _ -> failwithf "Invalid Activation." //ToDo: Replace with results type, add softmax (probably using fold)
 
 let dActivateLayer (activation : string) (x : float) : float =
   match activation with
   | "id" -> 1.0
   | "sigmoid" -> x * (1.0 - x) 
   | "relu" -> if x > 0.0 then x else 0.0
-  | _ -> failwithf "Invalid Activation." //ToDo: Replace with results type
+  | _ -> failwithf "Invalid Activation." //ToDo: Replace with results type, add softmax (see above), change to output of float list -> float list
 
 let lossFunction (loss : string) (n : int) : float -> float -> float =
   match loss with
-  | "mse" -> fun actual output -> (1.0 / (n |> float)) * (actual - output) ** 2.0
+  | "mse" -> fun actual target -> (1.0 / (n |> float)) * (actual - target) ** 2.0
+  | _ -> failwithf "Invalid Loss Function." //ToDo: Replace with results type
+
+let dLossFunction (loss : string) (n : int) : float -> float -> float =
+  match loss with
+  | "mse" -> fun actual target -> (2.0 / (n |> float)) * (actual - target)
   | _ -> failwithf "Invalid Loss Function." //ToDo: Replace with results type
 
 let initialiseLayers (layers : networkLayers) (inputs : float list) : learnableParameters = 
@@ -48,7 +53,8 @@ let forwardSingleLayer (biases : float) (weights : float list) (inputs : float l
     |> List.mapi (fun j el -> 
       el * weights.[i * inputs.Length + j])
     |> List.reduce (+)))
-    |> fun el -> el, el |> List.map (activateLayer activation)
+    |> fun el -> 
+      el, el |> activateLayer activation
 
 let forwardFull (network : networkLayers) (parameters : learnableParameters) (inputs : float list) = 
   List.init (network |> List.length) id
@@ -62,25 +68,29 @@ let getOverallError (targetOutputs : float list) (actualOutputs : float list) (l
   |> List.map2 (lossFunction loss targetOutputs.Length) targetOutputs
   |> List.reduce (+) 
 
-// Currently sorting out Backpropogation. Completely broken at the moment.
-let backPropogation (network : networkLayers) (forwardPropogation : (float list * float list) list) (actualOutput : float list) (inputs : float list) (parameters : learnableParameters) =
+let backPropogation (network : networkLayers) (forwardPropogation : (float list * float list) list) (targetOutput : float list) (inputs : float list) (parameters : learnableParameters) (loss : string) (learningRate : float) =
   let activated = forwardPropogation |> List.rev
-  let revNetwork = network |> List.rev
   let weights = parameters.weights |> List.rev
 
-  let mutable tempLayer = []
 // (*
-  printf "%A \n" (0.4 - 0.5 * ((activated.[0] |> snd).[0] - actualOutput.[0]) * (dActivateLayer "sigmoid" (activated.[0] |> snd).[0]) * (activated.[1] |> snd).[0])
-  printf "%A \n" (0.45 - 0.5 * ((activated.[0] |> snd).[0] - actualOutput.[0]) * (dActivateLayer "sigmoid" (activated.[0] |> snd).[0]) * (activated.[1] |> snd).[1])
-  printf "%A \n" (0.5 - 0.5 * ((activated.[0] |> snd).[1] - actualOutput.[1]) * (dActivateLayer "sigmoid" (activated.[0] |> snd).[1]) * (activated.[1] |> snd).[0])
-  printf "%A \n" (0.55 - 0.5 * ((activated.[0] |> snd).[1] - actualOutput.[1]) * (dActivateLayer "sigmoid" (activated.[0] |> snd).[1]) * (activated.[1] |> snd).[1])
-// *)
-  ""
+  printf "%A \n" (weights.[0].[0] - learningRate * ((dLossFunction loss targetOutput.Length) (activated.[0] |> snd).[0] targetOutput.[0]) * (dActivateLayer (network.[0] |> snd) (activated.[0] |> snd).[0]) * (activated.[1] |> snd).[0])
+  printf "%A \n" (weights.[0].[1] - learningRate * ((dLossFunction loss targetOutput.Length) (activated.[0] |> snd).[0] targetOutput.[0]) * (dActivateLayer (network.[0] |> snd) (activated.[0] |> snd).[0]) * (activated.[1] |> snd).[1])
+  printf "%A \n" (weights.[0].[2] - learningRate * ((dLossFunction loss targetOutput.Length) (activated.[0] |> snd).[1] targetOutput.[1]) * (dActivateLayer (network.[0] |> snd) (activated.[0] |> snd).[1]) * (activated.[1] |> snd).[0])
+  printf "%A \n" (weights.[0].[3] - learningRate * ((dLossFunction loss targetOutput.Length) (activated.[0] |> snd).[1] targetOutput.[1]) * (dActivateLayer (network.[0] |> snd) (activated.[0] |> snd).[1]) * (activated.[1] |> snd).[1])
+
+  printf "\n"
+
+  printf "%A \n" (weights.[1].[0] - ((learningRate * ((dLossFunction loss targetOutput.Length) (activated.[0] |> snd).[0] targetOutput.[0]) * (dActivateLayer (network.[0] |> snd) (activated.[0] |> snd).[0]) * weights.[0].[0]) + (learningRate * ((dLossFunction loss targetOutput.Length) (activated.[0] |> snd).[1] targetOutput.[1]) * (dActivateLayer (network.[0] |> snd) (activated.[0] |> snd).[1]) * weights.[0].[2])) * (dActivateLayer (network.[1] |> snd) (activated.[1] |> snd).[0]) * inputs.[0])
+  printf "%A \n" (weights.[1].[1] - ((learningRate * ((dLossFunction loss targetOutput.Length) (activated.[0] |> snd).[0] targetOutput.[0]) * (dActivateLayer (network.[0] |> snd) (activated.[0] |> snd).[0]) * weights.[0].[0]) + (learningRate * ((dLossFunction loss targetOutput.Length) (activated.[0] |> snd).[1] targetOutput.[1]) * (dActivateLayer (network.[0] |> snd) (activated.[0] |> snd).[1]) * weights.[0].[2])) * (dActivateLayer (network.[1] |> snd) (activated.[1] |> snd).[0]) * inputs.[1])
+  printf "%A \n" (weights.[1].[2] - ((learningRate * ((dLossFunction loss targetOutput.Length) (activated.[0] |> snd).[0] targetOutput.[0]) * (dActivateLayer (network.[0] |> snd) (activated.[0] |> snd).[0]) * weights.[0].[1]) + (learningRate * ((dLossFunction loss targetOutput.Length) (activated.[0] |> snd).[1] targetOutput.[1]) * (dActivateLayer (network.[0] |> snd) (activated.[0] |> snd).[1]) * weights.[0].[3])) * (dActivateLayer (network.[1] |> snd) (activated.[1] |> snd).[1]) * inputs.[0])
+  printf "%A \n" (weights.[1].[3] - ((learningRate * ((dLossFunction loss targetOutput.Length) (activated.[0] |> snd).[0] targetOutput.[0]) * (dActivateLayer (network.[0] |> snd) (activated.[0] |> snd).[0]) * weights.[0].[1]) + (learningRate * ((dLossFunction loss targetOutput.Length) (activated.[0] |> snd).[1] targetOutput.[1]) * (dActivateLayer (network.[0] |> snd) (activated.[0] |> snd).[1]) * weights.[0].[3])) * (dActivateLayer (network.[1] |> snd) (activated.[1] |> snd).[1]) * inputs.[1])
+// *)  
+  "lol test output"
 
   
   
 
-let learningRate = 0.005
+let learningRate = 0.5
 let numEpochs = 10000
 let loss = "mse"
 
@@ -95,8 +105,15 @@ let testForwardFullOne = forwardFull testNetwork initialParameters testInput
 let testNetworkOutputs = (testForwardFullOne.[testForwardFullOne.Length - 1])
 let errorsOneLayer = getOverallError testOutputs (testNetworkOutputs |> snd) loss
 
-let backPropagationOne = backPropogation testNetwork (testForwardFullOne) testOutputs testInput initialParameters
+let backPropagationOne = backPropogation testNetwork testForwardFullOne testOutputs testInput initialParameters loss learningRate
 
-printf "%A \n" (testForwardFullOne)
+//printf "%A \n" (testForwardFullOne)
 //printf "%A \n" (errorsOneLayer)
 //printf "%A \n" (backPropagationOne)
+
+(*
+printf "%A \n" (0.15 - 0.5 * ((((activated.[0] |> snd).[0] - targetOutput.[0]) * (dActivateLayer (network.[0] |> snd) (activated.[0] |> snd).[0]) * 0.4) + (((activated.[0] |> snd).[1] - targetOutput.[1]) * (dActivateLayer (network.[0] |> snd) (activated.[0] |> snd).[1]) * 0.5)) * (dActivateLayer (network.[1] |> snd) (activated.[1] |> snd).[0]) * inputs.[0])
+printf "%A \n" (0.2 - 0.5 * ((((activated.[0] |> snd).[0] - targetOutput.[0]) * (dActivateLayer (network.[0] |> snd) (activated.[0] |> snd).[0]) * 0.4) + (((activated.[0] |> snd).[1] - targetOutput.[1]) * (dActivateLayer (network.[0] |> snd) (activated.[0] |> snd).[1]) * 0.5)) * (dActivateLayer (network.[1] |> snd) (activated.[1] |> snd).[0]) * inputs.[1])
+printf "%A \n" (0.25 - 0.5 * ((((activated.[0] |> snd).[0] - targetOutput.[0]) * (dActivateLayer (network.[0] |> snd) (activated.[0] |> snd).[0]) * 0.45) + (((activated.[0] |> snd).[1] - targetOutput.[1]) * (dActivateLayer (network.[0] |> snd) (activated.[0] |> snd).[1]) * 0.55)) * (dActivateLayer (network.[1] |> snd) (activated.[1] |> snd).[1]) * inputs.[0])
+printf "%A \n" (0.3 - 0.5 * ((((activated.[0] |> snd).[0] - targetOutput.[0]) * (dActivateLayer (network.[0] |> snd) (activated.[0] |> snd).[0]) * 0.45) + (((activated.[0] |> snd).[1] - targetOutput.[1]) * (dActivateLayer (network.[0] |> snd) (activated.[0] |> snd).[1]) * 0.55)) * (dActivateLayer (network.[1] |> snd) (activated.[1] |> snd).[1]) * inputs.[1])
+*)
