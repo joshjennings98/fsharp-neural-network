@@ -2,7 +2,7 @@
 
 type Loss =
     | MSE
-    | CategoricalCrossEntropy 
+    | CrossEntropy 
     | MAE
 
 let lossFunction (loss : Loss) (n : int) : float -> float -> float =
@@ -10,7 +10,7 @@ let lossFunction (loss : Loss) (n : int) : float -> float -> float =
     | MSE -> 
         fun actual target -> 
             (1.0 / (n |> float)) * (actual - target) ** 2.0
-    | CategoricalCrossEntropy ->
+    | CrossEntropy ->
         fun target actual ->
             match target with // If the error is zero and we don't split it up then it might return NaN since we will evaluate log(0)
             | 1.0 -> target * log(actual)
@@ -23,7 +23,7 @@ let lossFunction (loss : Loss) (n : int) : float -> float -> float =
 let dLossFunction (loss : Loss) (n : int) : float -> float -> float =
     match loss with
     | MSE -> fun actual target -> (2.0 / (n |> float)) * (actual - target) * -1.0
-    | CategoricalCrossEntropy -> 
+    | CrossEntropy -> 
         fun target actual -> 
             let actual1 =
                 match actual with // Avoid dividing by zero - This method might not be ideal
