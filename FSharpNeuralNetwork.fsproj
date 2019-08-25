@@ -6,6 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Activations.fs" />
+    <Compile Include="Losses.fs" />
+    <Compile Include="Types.fs" />
+    <Compile Include="ForwardPropogation.fs" />
+    <Compile Include="BackPropogation.fs" />
     <Compile Include="NeuralNetwork.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
