@@ -8,18 +8,18 @@ Networks can be specified using the following format. Any number of layers are s
 
 ```fsharp
 let networkArchitecture = [
-        {inputDims = 3; outputDims = 3; activation = Relu};
-        {inputDims = 3; outputDims = 3; activation = Sigmoid};
-        {inputDims = 3; outputDims = 3; activation = Softmax};
-    ]
+    {inputDims = 3; outputDims = 3; activation = Relu};
+    {inputDims = 3; outputDims = 3; activation = Sigmoid};
+    {inputDims = 3; outputDims = 3; activation = Softmax};
+]
 ```
 
 To train and run the network, see the code snippets below:
 
 ```fsharp
-    let x = trainNetwork networkArchitecture [0.0; 1.0; 0.0] [0.1; 0.2; 0.7] 0.005 CrossEntropy 10000
-    
-    let output, error = runNetwork x [0.1; 0.2; 0.7] networkArchitecture CrossEntropy [0.0; 1.0; 0.0]
+let x = trainNetwork networkArchitecture [0.0; 1.0; 0.0] [0.1; 0.2; 0.7] 0.005 CrossEntropy 10000
+
+let output, error = runNetwork x [0.1; 0.2; 0.7] networkArchitecture CrossEntropy [0.0; 1.0; 0.0]
 ```
 
 ## Features
