@@ -1,18 +1,8 @@
 ﻿module Activations
 
-type Activation =
-    | Relu
-    | Sigmoid
-    | Tanh
-    | Softmax
-    | LeakyRelu of float
-    | Elu of float
-    | Selu of float * float
-    | Softsign
-    | Softplus
-    | Exponential
-    | HardSigmoid
-    | Linear
+
+open Types
+
 
 let activateLayer (activation : Activation) (input : float list) : float list =
     match activation with
@@ -45,6 +35,7 @@ let activateLayer (activation : Activation) (input : float list) : float list =
             | _ -> 0.2 * x + 0.5
         List.map hardSigmoid input
     | Linear -> input        
+
 
 let dActivateLayer (activation : Activation) (input : float list) : float list =
     match activation with

@@ -1,9 +1,8 @@
 ﻿module Losses
 
-type Loss =
-    | MSE
-    | CrossEntropy 
-    | MAE
+
+open Types
+
 
 let lossFunction (loss : Loss) (n : int) : float -> float -> float =
     match loss with
@@ -19,6 +18,7 @@ let lossFunction (loss : Loss) (n : int) : float -> float -> float =
     | MAE -> 
         fun actual target -> 
             (1.0 / (n |> float)) * (abs (actual - target))
+
 
 let dLossFunction (loss : Loss) (n : int) : float -> float -> float =
     match loss with
@@ -38,6 +38,7 @@ let dLossFunction (loss : Loss) (n : int) : float -> float -> float =
     | MAE -> 
         fun target actual -> // After too many iterations this loss function also causes some nan errors like catergorical cross entropy
             if actual > target then 1.0 else -1.0
+
 
 let getOverallError (targetOutputs : float list) (actualOutputs : float list) (loss : Loss) : float =
     actualOutputs
