@@ -72,7 +72,8 @@ Currently, the following loss functions are avaliable:
 A single run of the network can be specified as follows:
 
 ```fsharp
-runNetwork model input networkArchitecture
+// runNetwork model input architecture
+runNetwork model [0.1; 0.8; 0.4] networkArchitecture // [0.9064375283; 0.9983475419]
 ```
 
 We can test multiple inputs by using a loop:
