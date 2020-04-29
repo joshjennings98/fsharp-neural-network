@@ -1,18 +1,14 @@
-﻿// To Do:
+﻿// Future improvements:
 //
-// Add optimisers
-// Add initialisers
+// Add more optimisers
+// Add more initialisers
 // Add graphs
 // Add datasets
 // Add more loss functions
-// Add regularisers
+// Add more regularisers
 // Add different types of layer (conv and pooling)
 // Add more options for hyperparameters such as clip values etc.
-// Fix nan problem
 
-open System
-open Activations
-open Losses
 open Types
 open NeuralNetwork
 

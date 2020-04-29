@@ -8,13 +8,13 @@ open BackPropogation
 
 
 let initialiseNetwork (architecture : Layer list) : Parameters =
-    let rand (lo : int) (hi : int) (step : float) : float = // Need the unit so its a function
-        System.Random().Next(lo / step, hi / step) 
+    let rand (lo : float) (hi : float) (step : float) : float = // Need the unit so its a function
+        System.Random().Next(int (lo / step), int (hi / step))
         |> float
-        |> (*) precision
+        |> (*) step
 
     let genRandomList (size : int) : float list =
-        List.init size (fun _ -> rand 0 1 0.01)  
+        List.init size (fun _ -> rand 0.0 1.0 0.01)  
     
     let initialWeights =
         [List.init (List.last architecture).outputDims (fun _ -> [1.0])] // This is for the output layer. This makes backpropogation easier

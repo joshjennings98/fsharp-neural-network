@@ -1,12 +1,6 @@
 ﻿module Types
 
 
-type Layer = {inputDims : int; outputDims : int; activation : Activation}
-
-
-type Parameters = {weights : float list list list; biases : float list}
-
-
 type Activation =
     | Relu
     | Sigmoid
@@ -26,3 +20,9 @@ type Loss =
     | MSE
     | CrossEntropy 
     | MAE
+
+
+type Layer = {inputDims : int; outputDims : int; activation : Activation}
+
+
+type Parameters = {weights : float list list list; biases : float list}

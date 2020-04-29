@@ -19,4 +19,4 @@ let forwardFull (parameters : Parameters) (inputs : float list) (layers : Layer 
             parameters.biases.[index], parameters.weights.[index], layers.[index].activation
         [forwardSingleLayer biases weights acc.[0] activation] @ acc) 
             [inputs]
-    |> List.append [List.init (List.last layers).outputDims id] // Add 1.0s to the final layer for making back propogation easier
+    |> List.append [List.init (List.last layers).outputDims float] // Add 1.0s to the final layer for making back propogation easier

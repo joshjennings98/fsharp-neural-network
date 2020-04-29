@@ -30,8 +30,8 @@ let backPropSingleLayer (targetOutputs : float list) (loss : Loss) (learningRate
         |> dActivateLayer layers.[layerIndex].activation
         |> List.map2 (*) intermediateOutputDeltaSum // Multiply value by derivative of the activation function (value now equivalent to delta)
         |> List.map (fun delta -> 
-            forwardPropParts.[layerIndex + 2]) 
-            |> List.map (fun out -> learningRate * delta * out) // learningRate * delta * outPrev
+            forwardPropParts.[layerIndex + 2] 
+            |> List.map (fun out -> learningRate * delta * out)) // learningRate * delta * outPrev
         |> List.map2 (List.map2 (-)) allWeights.[layerIndex + 1] // Subtract value from corresponding weight
     
     newWeights, intermediateOutputDeltaSum
