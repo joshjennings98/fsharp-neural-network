@@ -28,8 +28,8 @@ let initialiseNetwork (architecture : Layer list) : Parameters =
     {weights = initialWeights; biases = inititalBiases}
 
 
-let trainNetwork (architecture : Layer list) (targetOutputs : float list) 
-    (inputs : float list) (learningRate : float) (loss : Loss) (iterations : int) : Parameters =
+let trainNetwork (architecture : Layer list) (targetOutputs : float list list) 
+    (inputs : float list list) (learningRate : float) (loss : Loss) (iterations : int) : Parameters =
     
     let weightUpdate (parameters : Parameters) (weights : (float list list * float list) list) : Parameters =
         let newWeights =
@@ -40,6 +40,8 @@ let trainNetwork (architecture : Layer list) (targetOutputs : float list)
     let initial = initialiseNetwork architecture
 
     let targets = List.map (fun el -> [el]) targetOutputs
+
+    printfn "%A" targets
     
     printfn "Network: %A\n" initial
     
@@ -49,21 +51,25 @@ let trainNetwork (architecture : Layer list) (targetOutputs : float list)
             printfn "Iteration number: %A" (iterations + 1)
             parameters
         | _ -> 
-            if iterations % 100 = 99 || iterations = 0
-            then printfn "Iteration number: %A" (iterations + 1)
-            else printf ""
+            let idx = System.Random().Next(0, List.length targetOutputs)
 
             let fullSingle = 
-                forwardFull parameters inputs architecture
-                |> backPropFull architecture parameters targets learningRate loss
+                forwardFull parameters inputs.[idx] architecture
+                |> backPropFull architecture parameters targets.[idx] learningRate loss
                 |> weightUpdate parameters
-            
+
+            if iterations % 100 = 99 || iterations = 0
+            then 
+                let f = forwardFull parameters inputs.[idx] architecture
+                printfn "Iteration number: %A\nError: %A\n" (iterations + 1) (getOverallError targets.[idx].[0] f.[1] loss)
+            else printf ""
+
             train fullSingle model maxIterations (iterations + 1)
     
     train initial architecture iterations 0
 
 
-let runNetwork (trainedNetwork : Parameters) (input : float list) (architecture : Layer list) 
+let runNetworkTest (trainedNetwork : Parameters) (input : float list) (architecture : Layer list) 
     (loss : Loss) (targetOutputs : float list) : float list * float =
     
     let output = 
@@ -73,3 +79,11 @@ let runNetwork (trainedNetwork : Parameters) (input : float list) (architecture 
         getOverallError targetOutputs output.[1] loss // Index of 1 since there was 1.0s added to the front
     
     output.[1], error
+
+
+let runNetwork (trainedNetwork : Parameters) (input : float list) (architecture : Layer list) : float list =
+    
+    let output =
+        forwardFull trainedNetwork input architecture
+
+    output.[1]
